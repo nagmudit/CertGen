@@ -14,6 +14,7 @@ export default function CertificateEditor() {
   const [bgColor, setBgColor] = useState("#ffffff");
   const [fontFamily, setFontFamily] = useState("Arial");
   const [fontSize, setFontSize] = useState(20);
+  const [textColor, setTextColor] = useState("#000000");
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [sizePreset, setSizePreset] = useState("800x600");
   const [mounted, setMounted] = useState(false);
@@ -67,6 +68,9 @@ export default function CertificateEditor() {
         ) {
           setFontFamily((selected as fabric.IText).fontFamily || "Arial");
           setFontSize((selected as fabric.IText).fontSize || 20);
+          setTextColor(
+            ((selected as fabric.IText).fill as string) || "#000000"
+          );
         }
       };
 
@@ -385,6 +389,19 @@ export default function CertificateEditor() {
     }
   };
 
+  const handleTextColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const color = e.target.value;
+    setTextColor(color);
+    if (
+      canvasInstance.current &&
+      selectedObject &&
+      (selectedObject.type === "i-text" || selectedObject.type === "text")
+    ) {
+      (selectedObject as fabric.IText).set("fill", color);
+      canvasInstance.current.renderAll();
+    }
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !canvasInstance.current) return;
@@ -656,6 +673,47 @@ export default function CertificateEditor() {
                 selectedObject.type !== "text")
             }
           />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold uppercase">Text Color</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={textColor}
+              onChange={(e) => {
+                setTextColor(e.target.value);
+                if (
+                  canvasInstance.current &&
+                  selectedObject &&
+                  (selectedObject.type === "i-text" ||
+                    selectedObject.type === "text")
+                ) {
+                  (selectedObject as fabric.IText).set("fill", e.target.value);
+                  canvasInstance.current.renderAll();
+                }
+              }}
+              className="h-8 w-20 px-2 border border-black text-xs"
+              placeholder="#000000"
+              disabled={
+                !selectedObject ||
+                (selectedObject.type !== "i-text" &&
+                  selectedObject.type !== "text")
+              }
+            />
+            <input
+              type="color"
+              value={textColor}
+              onChange={handleTextColorChange}
+              className="h-8 w-8 cursor-pointer border border-black p-0"
+              style={{ WebkitAppearance: "none" }}
+              disabled={
+                !selectedObject ||
+                (selectedObject.type !== "i-text" &&
+                  selectedObject.type !== "text")
+              }
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-1">
