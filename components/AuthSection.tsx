@@ -67,18 +67,18 @@ export default function AuthSection() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 border rounded-lg bg-gray-50">
+    <div className="flex flex-col gap-4 p-4 border border-black rounded-lg bg-white">
       <h2 className="text-xl font-bold">3. Send Certificates</h2>
 
       {authStatus === "unauthenticated" ? (
         <div className="flex flex-col gap-4">
-          <p className="text-gray-600">
+          <p className="text-black">
             Connect your email account to send certificates.
           </p>
           <div className="flex gap-4">
             <button
               onClick={() => handleLogin("google")}
-              className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50"
+              className="flex items-center gap-2 px-6 py-3 bg-white border border-black rounded shadow-sm hover:bg-black hover:text-white transition-colors"
             >
               <Image
                 src="https://www.svgrepo.com/show/475656/google-color.svg"
@@ -91,7 +91,7 @@ export default function AuthSection() {
             </button>
             <button
               onClick={() => handleLogin("outlook")}
-              className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50"
+              className="flex items-center gap-2 px-6 py-3 bg-white border border-black rounded shadow-sm hover:bg-black hover:text-white transition-colors"
             >
               <Image
                 src="https://www.svgrepo.com/show/452069/microsoft.svg"
@@ -106,7 +106,7 @@ export default function AuthSection() {
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="p-4 bg-green-50 text-green-700 rounded border border-green-200">
+          <div className="p-4 bg-black text-white rounded border border-black">
             ✅ Authenticated successfully
           </div>
 
@@ -116,7 +116,7 @@ export default function AuthSection() {
               type="text"
               value={emailSubject}
               onChange={(e) => setEmailSubject(e.target.value)}
-              className="p-2 border rounded"
+              className="p-2 border border-black rounded"
             />
           </div>
 
@@ -125,9 +125,9 @@ export default function AuthSection() {
             <textarea
               value={emailBody}
               onChange={(e) => setEmailBody(e.target.value)}
-              className="p-2 border rounded h-32"
+              className="p-2 border border-black rounded h-32"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-black">
               Supports variables like {`{{name}}`}
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function AuthSection() {
           <button
             onClick={handleSend}
             disabled={isSending}
-            className="px-6 py-3 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="px-6 py-3 bg-black text-white border border-black rounded font-medium hover:bg-white hover:text-black transition-colors disabled:opacity-50"
           >
             {isSending ? "Queueing..." : `Send to ${csvData.length} Recipients`}
           </button>

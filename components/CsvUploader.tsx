@@ -36,7 +36,7 @@ export default function CsvUploader() {
   });
 
   return (
-    <div className="flex flex-col gap-4 p-4 border rounded-lg bg-gray-50">
+    <div className="flex flex-col gap-4 p-4 border border-black rounded-lg bg-white">
       <h2 className="text-xl font-bold">2. Upload Recipient Data</h2>
 
       <div
@@ -44,8 +44,8 @@ export default function CsvUploader() {
         className={`p-8 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors
           ${
             isDragActive
-              ? "border-blue-500 bg-blue-50"
-              : "border-gray-300 hover:border-blue-400"
+              ? "border-black bg-gray-100"
+              : "border-gray-300 hover:border-black"
           }`}
       >
         <input {...getInputProps()} />
@@ -61,14 +61,14 @@ export default function CsvUploader() {
           <h3 className="font-semibold mb-2">
             Preview ({csvData.length} rows)
           </h3>
-          <div className="overflow-x-auto max-h-60 border rounded">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-100">
+          <div className="overflow-x-auto max-h-60 border border-black rounded">
+            <table className="min-w-full divide-y divide-black">
+              <thead className="bg-black text-white">
                 <tr>
                   {Object.keys(csvData[0]).map((header) => (
                     <th
                       key={header}
-                      className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
                     >
                       {header}
                     </th>
@@ -81,7 +81,7 @@ export default function CsvUploader() {
                     {Object.values(row).map((cell: unknown, j) => (
                       <td
                         key={j}
-                        className="px-4 py-2 whitespace-nowrap text-sm text-gray-500"
+                        className="px-4 py-2 whitespace-nowrap text-sm text-black"
                       >
                         {String(cell)}
                       </td>
@@ -91,7 +91,7 @@ export default function CsvUploader() {
               </tbody>
             </table>
             {csvData.length > 5 && (
-              <p className="p-2 text-sm text-gray-500 text-center">
+              <p className="p-2 text-sm text-black text-center">
                 ...and {csvData.length - 5} more rows
               </p>
             )}

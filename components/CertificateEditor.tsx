@@ -32,7 +32,7 @@ export default function CertificateEditor() {
         top: 200,
         fontFamily: "Arial",
         fontSize: 40,
-        fill: "blue",
+        fill: "black",
       });
       canvas.add(namePlaceholder);
 
@@ -64,26 +64,26 @@ export default function CertificateEditor() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 border rounded-lg bg-gray-50">
+    <div className="flex flex-col gap-4 p-4 border border-black rounded-lg bg-white">
       <h2 className="text-xl font-bold">1. Design Certificate</h2>
-      <div className="border shadow-sm">
+      <div className="border border-black shadow-sm">
         <canvas ref={canvasRef} />
       </div>
       <div className="flex gap-2">
         <button
           onClick={addText}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-black text-white border border-black rounded hover:bg-white hover:text-black transition-colors"
         >
           Add Text
         </button>
         <button
           onClick={saveTemplate}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-4 py-2 bg-white text-black border border-black rounded hover:bg-black hover:text-white transition-colors"
         >
           Save Template
         </button>
       </div>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-black">
         Use <code>{`{{variable}}`}</code> syntax for dynamic fields.
       </p>
     </div>
