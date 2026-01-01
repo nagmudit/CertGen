@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Store job IDs for this batch in Redis
     // We need to import the redis connection directly
     const redis = (await import('@/lib/redis')).default;
-    const jobIds = jobNodes.map(j => j.id);
+    const jobIds = jobNodes.map(j => j.id).filter((id): id is string => !!id);
     if (jobIds.length > 0) {
       await redis.sadd(`batch:${batchId}`, ...jobIds);
       // Expire after 24 hours
