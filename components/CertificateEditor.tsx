@@ -14,8 +14,15 @@ export default function CertificateEditor() {
   const [bgColor, setBgColor] = useState("#ffffff");
   const [fontFamily, setFontFamily] = useState("Arial");
   const [fontSize, setFontSize] = useState(20);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     if (canvasRef.current && !canvasInstance.current) {
       const canvas = new fabric.Canvas(canvasRef.current, {
         width: 800,
@@ -64,7 +71,7 @@ export default function CertificateEditor() {
         canvasInstance.current = null;
       };
     }
-  }, []);
+  }, [mounted]);
 
   const addText = () => {
     if (canvasInstance.current) {
@@ -139,6 +146,8 @@ export default function CertificateEditor() {
       alert("Template saved!");
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="flex flex-col gap-4 p-4 border border-black rounded-lg bg-white">
