@@ -471,6 +471,7 @@ export default function CertificateEditor() {
     if (!canvasInstance.current) return;
     // Clone canvas JSON
     const json = canvasInstance.current.toJSON();
+    const currentBgColor = canvasInstance.current.backgroundColor;
     // Create temporary canvas
     const tempCanvas = document.createElement("canvas");
     const fabricTemp = new fabric.Canvas(tempCanvas, {
@@ -478,12 +479,18 @@ export default function CertificateEditor() {
       height: canvasSize.height,
     });
     await fabricTemp.loadFromJSON(json);
+    // Ensure background color is set
+    fabricTemp.backgroundColor = currentBgColor || "#ffffff";
     // Replace variables in text objects
     fabricTemp.getObjects().forEach((obj) => {
       if (obj.type === "i-text" || obj.type === "text") {
         let text = (obj as fabric.IText).text || "";
         Object.entries(variableValues).forEach(([key, val]) => {
-          text = text.replace(new RegExp(`\\{\\{${key}\\}\\}`, "g"), val);
+          // Handle spaces around variable names: {{ Name }} or {{Name}}
+          text = text.replace(
+            new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, "gi"),
+            val
+          );
         });
         (obj as fabric.IText).set("text", text);
       }
