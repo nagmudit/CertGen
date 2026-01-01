@@ -18,6 +18,7 @@
     "dotenv": "^17.2.3",
     "fabric": "^7.1.0",
     "google-auth-library": "^10.5.0",
+    "googleapis": "^169.0.0",
     "ioredis": "^5.8.2",
     "isomorphic-fetch": "^3.0.0",
     "jose": "^6.1.3",

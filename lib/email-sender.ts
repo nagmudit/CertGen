@@ -2,9 +2,16 @@ import { google } from 'googleapis';
 import { Client } from '@microsoft/microsoft-graph-client';
 import { GOOGLE_CONFIG, OUTLOOK_CONFIG } from './auth-config';
 
+interface Tokens {
+  access_token: string;
+  refresh_token?: string;
+  expiry_date?: number;
+  provider?: string;
+}
+
 export async function sendEmail(
   provider: 'google' | 'outlook',
-  tokens: any,
+  tokens: Tokens,
   to: string,
   subject: string,
   body: string,
@@ -17,7 +24,7 @@ export async function sendEmail(
   }
 }
 
-async function sendGmail(tokens: any, to: string, subject: string, body: string, attachment: Uint8Array) {
+async function sendGmail(tokens: Tokens, to: string, subject: string, body: string, attachment: Uint8Array) {
   const oauth2Client = new google.auth.OAuth2(
     GOOGLE_CONFIG.clientId,
     GOOGLE_CONFIG.clientSecret,
@@ -68,11 +75,14 @@ async function sendGmail(tokens: any, to: string, subject: string, body: string,
   });
 }
 
-async function sendOutlook(tokens: any, to: string, subject: string, body: string, attachment: Uint8Array) {
+async function sendOutlook(tokens: Tokens, to: string, subject: string, body: string, attachment: Uint8Array) {
   // Check expiry and refresh if needed manually for Outlook/Graph
   let accessToken = tokens.access_token;
   
-  if (Date.now() > tokens.expiry_date) {
+  if (tokens.expiry_date && Date.now() > tokens.expiry_date) {
+    if (!tokens.refresh_token) {
+      throw new Error("Refresh token is missing");
+    }
     // Refresh token logic
     const response = await fetch(OUTLOOK_CONFIG.tokenUrl, {
       method: 'POST',
