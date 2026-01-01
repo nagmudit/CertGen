@@ -14,6 +14,8 @@ export default function CertificateEditor() {
   const [bgColor, setBgColor] = useState("#ffffff");
   const [fontFamily, setFontFamily] = useState("Arial");
   const [fontSize, setFontSize] = useState(20);
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [sizePreset, setSizePreset] = useState("800x600");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -25,8 +27,8 @@ export default function CertificateEditor() {
     if (!mounted) return;
     if (canvasRef.current && !canvasInstance.current) {
       const canvas = new fabric.Canvas(canvasRef.current, {
-        width: 800,
-        height: 600,
+        width: canvasSize.width,
+        height: canvasSize.height,
         backgroundColor: "#ffffff",
       });
       canvasInstance.current = canvas;
@@ -66,7 +68,151 @@ export default function CertificateEditor() {
       canvas.on("selection:updated", updateSelection);
       canvas.on("selection:cleared", () => setSelectedObject(null));
 
+      // Snapping Logic
+      const SNAP_DIST = 10;
+      const guidelines: fabric.Line[] = [];
+
+      const clearGuidelines = () => {
+        guidelines.forEach((line) => canvas.remove(line));
+        guidelines.length = 0;
+      };
+
+      const drawGuideline = (
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number
+      ) => {
+        const line = new fabric.Line([x1, y1, x2, y2], {
+          stroke: "magenta",
+          strokeWidth: 1,
+          selectable: false,
+          evented: false,
+          strokeDashArray: [5, 5],
+          opacity: 0.8,
+        });
+        // Mark as guideline to ignore in snap calculations
+        (line as any).isGuideline = true;
+        guidelines.push(line);
+        canvas.add(line);
+      };
+
+      canvas.on("object:moving", (e) => {
+        const obj = e.target;
+        if (!obj) return;
+
+        const canvasWidth = canvas.width || 0;
+        const canvasHeight = canvas.height || 0;
+
+        clearGuidelines();
+
+        // Get object bounds (absolute coordinates)
+        const bound = obj.getBoundingRect();
+        const objLeft = bound.left;
+        const objRight = bound.left + bound.width;
+        const objCenter = bound.left + bound.width / 2;
+        const objTop = bound.top;
+        const objBottom = bound.top + bound.height;
+        const objMiddle = bound.top + bound.height / 2;
+
+        // Targets
+        const targetsX: number[] = [0, canvasWidth / 2, canvasWidth];
+        const targetsY: number[] = [0, canvasHeight / 2, canvasHeight];
+
+        canvas.getObjects().forEach((o) => {
+          if (o === obj || (o as any).isGuideline) return;
+          const b = o.getBoundingRect();
+          targetsX.push(b.left, b.left + b.width / 2, b.left + b.width);
+          targetsY.push(b.top, b.top + b.height / 2, b.top + b.height);
+        });
+
+        // Find closest snap
+        let minDistX = SNAP_DIST;
+        let minDistY = SNAP_DIST;
+        let deltaX = 0;
+        let deltaY = 0;
+        let snappedXTarget = 0;
+        let snappedYTarget = 0;
+
+        // X Snapping
+        for (const target of targetsX) {
+          if (Math.abs(objLeft - target) < minDistX) {
+            minDistX = Math.abs(objLeft - target);
+            deltaX = target - objLeft;
+            snappedXTarget = target;
+          }
+          if (Math.abs(objRight - target) < minDistX) {
+            minDistX = Math.abs(objRight - target);
+            deltaX = target - objRight;
+            snappedXTarget = target;
+          }
+          if (Math.abs(objCenter - target) < minDistX) {
+            minDistX = Math.abs(objCenter - target);
+            deltaX = target - objCenter;
+            snappedXTarget = target;
+          }
+        }
+
+        // Y Snapping
+        for (const target of targetsY) {
+          if (Math.abs(objTop - target) < minDistY) {
+            minDistY = Math.abs(objTop - target);
+            deltaY = target - objTop;
+            snappedYTarget = target;
+          }
+          if (Math.abs(objBottom - target) < minDistY) {
+            minDistY = Math.abs(objBottom - target);
+            deltaY = target - objBottom;
+            snappedYTarget = target;
+          }
+          if (Math.abs(objMiddle - target) < minDistY) {
+            minDistY = Math.abs(objMiddle - target);
+            deltaY = target - objMiddle;
+            snappedYTarget = target;
+          }
+        }
+
+        // Apply snap
+        if (Math.abs(deltaX) > 0) {
+          obj.set({ left: obj.left + deltaX });
+          drawGuideline(snappedXTarget, 0, snappedXTarget, canvasHeight);
+        }
+        if (Math.abs(deltaY) > 0) {
+          obj.set({ top: obj.top + deltaY });
+          drawGuideline(0, snappedYTarget, canvasWidth, snappedYTarget);
+        }
+      });
+
+      canvas.on("mouse:up", () => {
+        clearGuidelines();
+      });
+
+      // Handle delete key
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Delete" || e.key === "Backspace") {
+          // Prevent deletion if typing in an input
+          if (
+            e.target instanceof HTMLInputElement ||
+            e.target instanceof HTMLTextAreaElement
+          ) {
+            return;
+          }
+
+          const activeObjects = canvas.getActiveObjects();
+          if (activeObjects.length) {
+            canvas.discardActiveObject();
+            activeObjects.forEach((obj) => {
+              canvas.remove(obj);
+            });
+            canvas.requestRenderAll();
+          }
+        }
+      };
+
+      window.addEventListener("keydown", handleKeyDown);
+
       return () => {
+        window.removeEventListener("keydown", handleKeyDown);
         canvas.dispose();
         canvasInstance.current = null;
       };
@@ -139,6 +285,32 @@ export default function CertificateEditor() {
     reader.readAsDataURL(file);
   };
 
+  const handleSizePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSizePreset(value);
+    if (value !== "custom") {
+      const [w, h] = value.split("x").map(Number);
+      setCanvasSize({ width: w, height: h });
+      if (canvasInstance.current) {
+        canvasInstance.current.setDimensions({ width: w, height: h });
+      }
+    }
+  };
+
+  const handleCustomSizeChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "width" | "height"
+  ) => {
+    const val = parseInt(e.target.value, 10) || 0;
+    setCanvasSize((prev) => {
+      const newSize = { ...prev, [type]: val };
+      if (canvasInstance.current) {
+        canvasInstance.current.setDimensions(newSize);
+      }
+      return newSize;
+    });
+  };
+
   const saveTemplate = () => {
     if (canvasInstance.current) {
       const json = canvasInstance.current.toJSON();
@@ -155,6 +327,43 @@ export default function CertificateEditor() {
 
       {/* Toolbar */}
       <div className="flex flex-wrap gap-4 p-4 border border-black rounded bg-gray-50 items-center">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold uppercase">Canvas Size</label>
+          <select
+            value={sizePreset}
+            onChange={handleSizePresetChange}
+            className="h-8 px-2 border border-black bg-white"
+          >
+            <option value="800x600">Default (800x600)</option>
+            <option value="1123x794">A4 Landscape</option>
+            <option value="1056x816">Letter Landscape</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+
+        {sizePreset === "custom" && (
+          <div className="flex gap-2">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold uppercase">Width</label>
+              <input
+                type="number"
+                value={canvasSize.width}
+                onChange={(e) => handleCustomSizeChange(e, "width")}
+                className="h-8 w-20 px-2 border border-black"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold uppercase">Height</label>
+              <input
+                type="number"
+                value={canvasSize.height}
+                onChange={(e) => handleCustomSizeChange(e, "height")}
+                className="h-8 w-20 px-2 border border-black"
+              />
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold uppercase">Background</label>
           <input
@@ -211,7 +420,7 @@ export default function CertificateEditor() {
         </div>
       </div>
 
-      <div className="border border-black shadow-sm overflow-hidden">
+      <div className="border border-black shadow-sm overflow-hidden w-fit mx-auto">
         <canvas ref={canvasRef} />
       </div>
 
